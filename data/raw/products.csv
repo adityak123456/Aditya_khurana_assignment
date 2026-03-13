@@ -1,0 +1,6 @@
+product_id,product_name,category,unit_price
+P001,Laptop,Electronics,1200.0
+P002,Mouse,Accessories,25.5
+P003,Keyboard,Accessories,75.0
+P004,Monitor,Electronics,300.0
+P005,Webcam,Accessories,60.0

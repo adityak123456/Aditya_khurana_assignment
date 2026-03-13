@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-gray-800">Business Analytics Dashboard</h1>
+        
+        <div id="loading" class="text-xl text-blue-600 font-semibold mb-4">Fetching data from API...</div>
+        
+        <div id="error" class="hidden text-xl text-red-600 font-semibold mb-4 bg-red-100 p-4 rounded"></div>
+
+        <div id="dashboard" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Monthly Revenue Trend</h2>
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Revenue by Category</h2>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow md:col-span-2 overflow-x-auto">
+                <h2 class="text-xl font-semibold mb-4">Top 10 Customers</h2>
+                <table class="min-w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Region</th>
+                            <th class="p-3">Total Spend ($)</th>
+                            <th class="p-3">Churn Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4">Regional KPIs</h2>
+                <div id="regionCards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Points to your FastAPI backend
+        const API_BASE = 'http://127.0.0.1:8000/api';
+
+        async function fetchData() {
+            try {
+                // Fetch all data endpoints at the same time
+                const [revRes, catRes, custRes, regRes] = await Promise.all([
+                    fetch(`${API_BASE}/revenue`),
+                    fetch(`${API_BASE}/categories`),
+                    fetch(`${API_BASE}/top-customers`),
+                    fetch(`${API_BASE}/regions`)
+                ]);
+
+                if (!revRes.ok || !catRes.ok || !custRes.ok || !regRes.ok) {
+                    throw new Error("Failed to fetch one or more datasets from the backend.");
+                }
+
+                const revenueData = await revRes.json();
+                const categoryData = await catRes.json();
+                const customersData = await custRes.json();
+                const regionData = await regRes.json();
+
+                // Hide loading message, show the dashboard grid
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+
+                // Draw the components
+                renderRevenueChart(revenueData);
+                renderCategoryChart(categoryData);
+                renderCustomersTable(customersData);
+                renderRegionCards(regionData);
+
+            } catch (error) {
+                // Handle API failures
+                document.getElementById('loading').classList.add('hidden');
+                const errorEl = document.getElementById('error');
+                errorEl.classList.remove('hidden');
+                errorEl.innerText = "Error loading dashboard: " + error.message + " (Is your backend server running?)";
+            }
+        }
+
+        function renderRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.order_year_month),
+                    datasets: [{
+                        label: 'Total Revenue ($)',
+                        data: data.map(d => d.total_revenue),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                }
+            });
+        }
+
+        function renderCategoryChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.category),
+                    datasets: [{
+                        label: 'Revenue by Category ($)',
+                        data: data.map(d => d.total_revenue),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                }
+            });
+        }
+
+        function renderCustomersTable(data) {
+            const tbody = document.getElementById('customersTableBody');
+            tbody.innerHTML = data.map(cust => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${cust.name}</td>
+                    <td class="p-3">${cust.region}</td>
+                    <td class="p-3 font-medium">$${cust.total_spend.toFixed(2)}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-sm rounded ${cust.churned ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                            ${cust.churned ? 'Churned' : 'Active'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderRegionCards(data) {
+            const container = document.getElementById('regionCards');
+            container.innerHTML = data.map(reg => `
+                <div class="border p-4 rounded bg-gray-50 text-center shadow-sm">
+                    <h3 class="font-bold text-lg text-gray-700">${reg.region}</h3>
+                    <div class="mt-2 space-y-1">
+                        <p class="text-sm text-gray-500">Revenue: <span class="font-semibold text-gray-800">$${reg.total_revenue.toFixed(2)}</span></p>
+                        <p class="text-sm text-gray-500">Orders: <span class="font-semibold text-gray-800">${reg.number_of_orders}</span></p>
+                        <p class="text-sm text-gray-500">Customers: <span class="font-semibold text-gray-800">${reg.number_of_customers}</span></p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Kick off the data fetch when the page loads
+        fetchData();
+    </script>
+</body>
+</html>

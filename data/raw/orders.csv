@@ -1,0 +1,7 @@
+order_id,customer_id,product,amount,order_date,status
+O101,C1,Laptop,1200.0,2023-06-01,done
+O102,C2,Mouse,,15/06/2023,pending
+O103,C3,Mouse,25.5,06-20-2023,canceled
+O104,C4,Monitor,,2023-07-01,completed
+,,Keyboard,75.0,2023-07-05,refunded
+O106,C5,Laptop,1150.0,07/10/2023,SUCCESSFUL

@@ -1,0 +1,4 @@
+name,region,total_spend,churned
+Alice,North,1200.0,True
+Eve,West,1150.0,False
+Diana,East,0.0,True

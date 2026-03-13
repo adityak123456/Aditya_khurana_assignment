@@ -1,0 +1,6 @@
+order_id,customer_id,product,amount,order_date,status,order_year_month
+O101,C1,Laptop,1200.0,2023-06-01,completed,2023-06
+O102,C2,Mouse,25.5,2023-06-15,pending,2023-06
+O103,C3,Mouse,25.5,2023-06-20,cancelled,2023-06
+O104,C4,Monitor,,2023-07-01,completed,2023-07
+O106,C5,Laptop,1150.0,2023-10-07,completed,2023-10

@@ -1,0 +1,6 @@
+customer_id,name,email,region,signup_date,is_valid_email
+C1,Alice,alice@example.com,North,2023-05-10,True
+C4,Diana,diana@domain,East,2023-03-12,False
+C2,Bob,bob_at_example.com,South,2023-02-20,False
+C3,Charlie,,Unknown,,False
+C5,Eve,eve@example.com,West,,True
